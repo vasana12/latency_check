@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="SshConfigs">
+    <configs>
+      <sshConfig authType="PASSWORD" host="218.153.187.100" id="2e8816fa-da94-4073-95e3-aa075e4240ce" port="22" customName="hpe" nameFormat="CUSTOM" username="datacast" useOpenSSHConfig="true">
+        <option name="customName" value="hpe" />
+      </sshConfig>
+    </configs>
+  </component>
+</project>
