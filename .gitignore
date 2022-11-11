@@ -187,3 +187,7 @@ fabric.properties
 .ebignore
 .ebextensions
 server.py
+# Elastic Beanstalk Files
+.elasticbeanstalk/*
+!.elasticbeanstalk/*.cfg.yml
+!.elasticbeanstalk/*.global.yml

@@ -22,7 +22,7 @@ logger.addHandler(stream_handler)
 ##File handler
 filename = f"{project_dir}/log_script/{config.LOGGING_FILENAME}"
 file_handler = logging.FileHandler(filename=filename, mode="a")
-file_handler.setLevel(logging.DEBUG)
+file_handler.setLevel(logging.INFO)
 FORMAT = '%(message)s'
 file_log_formatter = logging.Formatter(FORMAT)
 file_handler.setFormatter(file_log_formatter)

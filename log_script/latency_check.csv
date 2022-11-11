@@ -11,3 +11,7 @@ start_time_timestamp	method	url	status_code	latency
 1666153603000	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	540
 1667276803000	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	540
 1662611203000	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	400	540
+1668135781887	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	126
+1668135781887	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	126
+1668135781887	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	126
+1668135781887	GET	http://127.0.0.1:8000/insight/influencer?hashtag=%EB%A7%81%EB%B8%94%EC%B2%B4%ED%97%98%EB%8B%A8&limit=10&max_follower=1000&min_follower=0	200	126
