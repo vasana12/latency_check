@@ -1,3 +1,5 @@
+from typing import List, Dict
+
 from fastapi import FastAPI, Request, Response, Body
 from log import logger
 from model import LatencyMonitorSchema
@@ -53,24 +55,28 @@ def monitor_latency(patch: LatencyMonitorSchema = Body(example=
     return patch
 
 @app.get("/latency")
-def get_latency(timestamp_gte: int, timestamp_lte:int):
+def get_latency(timestamp_gte: int, timestamp_lte:int) -> List[Dict]:
     """
     저장된 latency의 timestamp 조회
     :param timestamp_gte: 마지막 시간
     :param timestamp_lte: 시작 시간
     :return:
     """
+
+    ###1. 필터링 할 날짜 타입 변환(타임스탬프 -> datetime)
     datetime_gte = datetime.fromtimestamp(timestamp_gte/1000.0)
     datetime_lte = datetime.fromtimestamp(timestamp_lte/1000.0)
+    logger.debug(f"datetime_gte:{datetime_gte}/ datetime_lte:{datetime_lte}")
 
-    df = pd.read_csv(f"{project_dir}/log_script/latency_check.csv",sep="\t")
+    ###2. latency 로그 데이터 읽고 pandas 이용하여 시계열 필터링
+    df = pd.read_csv(f"{project_dir}/log_script/latency_check.csv", sep="\t")
     df['start_time_timestamp'] = pd.to_datetime(df['start_time_timestamp'], unit='ms')
     df = df[(df['start_time_timestamp'] > f'{datetime_gte}') & (df['start_time_timestamp'] < f'{datetime_lte}')]
 
+    ###3. 데이터프레임 -> List[Dict]
     data_list = []
     for idx in df.index:
         start_time_timestamp = df.at[idx, "start_time_timestamp"]
-        print(start_time_timestamp)
         method = df.at[idx, "method"]
         url = df.at[idx, "url"]
         status_code = int(df.at[idx, "status_code"])
@@ -84,6 +90,5 @@ def get_latency(timestamp_gte: int, timestamp_lte:int):
                 "latency":latency
                 }
         data_list.append(data)
-    print(data_list)
     return data_list
     # return {"data_list": data_list}
