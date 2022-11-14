@@ -6,7 +6,11 @@
   3. 위 1,2 데이터는 csv 형식으로 조회 할 수 있어야 함.
 
 ## System requirements
-- requirements.txt
+1. git clone https://github.com/vasana12/latency_check
+2. python3 -m venv venv
+3. source venv/bin/activate
+4. pip install -r requirements.txt
+5. 실행 : sh latency_monitoring_start.sh
 
 ## result
 - log_script/latency_check.csv

@@ -1,6 +1,6 @@
 from typing import List, Dict
 
-from fastapi import FastAPI, Request, Response, Body
+from fastapi import FastAPI, Body
 from log import logger
 from model import LatencyMonitorSchema
 import pandas as pd
