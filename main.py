@@ -1,11 +1,11 @@
 from typing import List, Dict
-from fastapi import FastAPI, Body, Query
+from fastapi import FastAPI, Body, Query, Path
 from pytz import timezone
 
 from log import logger
 from model import LatencyMonitorSchema
 import pandas as pd
-from src.utils import get_project_root,convert_latency_dataframe_to_list_of_dict
+from src.utils import get_project_root, convert_latency_dataframe_to_list_of_dict, convert_tps_dataframe_to_list_of_dict
 from datetime import datetime, timedelta
 
 project_dir = get_project_root()
@@ -93,8 +93,8 @@ def get_latency(timestamp_gte: int, timestamp_lte: int) -> List[Dict]:
     return data_list
     # return {"data_list": data_list}
 
-@app.get("/tps")
-def get_tps_by_timestamp(timestamp_to_be_measured: int = Query(default=1668453034507), per_unit_time_sec: int = Query(default=5)) -> Dict:
+@app.get("/tps/{timestamp_to_be_measured}")
+def get_tps_by_timestamp(timestamp_to_be_measured: int = Path(default=1668453034507), per_unit_time_sec: int = Query(default=5)) -> Dict:
     """
     저장된 latency를 이용하여 측정 대상 시간의 tps 를 조회 ( tz : Asia/Seoul)
 
@@ -136,7 +136,58 @@ def get_tps_by_timestamp(timestamp_to_be_measured: int = Query(default=166845303
 
 
     transaction_list = convert_latency_dataframe_to_list_of_dict(df)
+
     data = {"tps_per_sec": tps_per_sec, "per_unit_time_sec": per_unit_time_sec, "timestamp_to_be_measured": end_time_to_be_measured, "transaction_list": transaction_list}
     return data
 
 
+
+@app.get("/tps")
+def get_tps_by_timestamp_period(start_timestamp_to_be_measured: int = Query(default=1668453034507),
+                                end_timestamp_to_be_measured: int = Query(default=1668453034507+180000),
+                                per_unit_time_sec: int = Query(default=5)) -> Dict:
+    """
+    저장된 latency 데이터를 이용하여 측정 대상 시간의 tps 를 구간별 조회 ( tz : Asia/Seoul)
+
+    param
+        timestamp_to_be_measured: 측정 대상 시간(timestamp(ms))
+        per_unit_time_sec: 집계 단위 구간( 단위 : 초)
+    return
+
+    """
+
+    ##1. latency 데이터 가져오기
+    df_latency = pd.read_csv(f"{project_dir}/log_script/latency_check.csv", sep="\t")
+
+    ## 2. transaction_end_timestamp = start_time_timestamp + latency
+    df_latency["transaction_end_timestamp"] = df_latency["start_time_timestamp"] + df_latency["latency"]
+    df_latency['transaction_end_time'] = pd.to_datetime(df_latency['transaction_end_timestamp'], unit='ms', utc=True).map(lambda x: x.tz_convert('Asia/Seoul'))
+
+    ## 3. timestamp -> datetime
+    start_time_to_be_measured = datetime.fromtimestamp(int(start_timestamp_to_be_measured / 1000), tz=timezone("Asia/Seoul"))
+    end_time_to_be_measured = datetime.fromtimestamp(int(end_timestamp_to_be_measured / 1000), tz=timezone("Asia/Seoul"))
+
+    ## 4. 위에서 구한 기간을 초단위로 시계열 데이터 만들기
+    range = pd.date_range(start_time_to_be_measured, end_time_to_be_measured, freq='1s')
+    df = pd.DataFrame(index=range)
+
+    ##5. 구간별로 집계(단위시간 : per_unit_time) 구간에 해당하는 latency 데이터를 집계하여 tps, latency 평균값 구하기
+    for time in df.index:
+
+        #구간의 시작 시간
+        period_start = time - timedelta(seconds=per_unit_time_sec)
+
+        #구간의 마지막 시간
+        period_end = time
+
+        #1. 구간에 해당하는 latency 데이터를 가지고 온다.
+        df_latency_filterd_by_time = df_latency[(df_latency["transaction_end_time"] >= period_start) & (df_latency["transaction_end_time"] <= period_end)]
+
+        #2. tps 를 구한다. tps 해당 구간동안 발생한 트랜젝션을 단위시간으로 나눈 값이다.
+        df.at[time, "tps"] = len(df_latency_filterd_by_time)/per_unit_time_sec
+
+        #3. 단위 시간동안의 latency 평균값을 구한다. sum(latency)/트랜젝션 수
+        df.at[time, "avg_latency"] = int(sum(df_latency_filterd_by_time["latency"])/len(df_latency_filterd_by_time)) if len(df_latency_filterd_by_time) != 0 else None
+
+    data = convert_tps_dataframe_to_list_of_dict(df)
+    return data
