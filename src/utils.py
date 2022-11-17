@@ -35,7 +35,7 @@ def isNaN(num):
 def convert_tps_dataframe_to_list_of_dict(df):
     data_list = []
     for idx in df.index:
-        tps = int(df.at[idx, "tps"])
+        tps = df.at[idx, "tps"]
         avg_latency = df.at[idx, "avg_latency"] if not numpy.isnan(df.at[idx, "avg_latency"]) else None
         data = {
             "time": idx,

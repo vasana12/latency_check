@@ -93,8 +93,8 @@ def get_latency(timestamp_gte: int, timestamp_lte: int) -> List[Dict]:
     return data_list
     # return {"data_list": data_list}
 
-@app.get("/tps/{timestamp_to_be_measured}")
-def get_tps_by_timestamp(timestamp_to_be_measured: int = Path(default=1668453034507), per_unit_time_sec: int = Query(default=5)) -> Dict:
+@app.get("/tps")
+def get_tps_by_timestamp(timestamp_to_be_measured: int = Query(default=1668453034507), per_unit_time_sec: int = Query(default=5)) -> Dict:
     """
     저장된 latency를 이용하여 측정 대상 시간의 tps 를 조회 ( tz : Asia/Seoul)
 
@@ -142,7 +142,7 @@ def get_tps_by_timestamp(timestamp_to_be_measured: int = Path(default=1668453034
 
 
 
-@app.get("/tps")
+@app.get("/tps/period")
 def get_tps_by_timestamp_period(start_timestamp_to_be_measured: int = Query(default=1668453034507),
                                 end_timestamp_to_be_measured: int = Query(default=1668453034507+180000),
                                 per_unit_time_sec: int = Query(default=5)) -> Dict:
@@ -183,7 +183,7 @@ def get_tps_by_timestamp_period(start_timestamp_to_be_measured: int = Query(defa
         #1. 구간에 해당하는 latency 데이터를 가지고 온다.
         df_latency_filterd_by_time = df_latency[(df_latency["transaction_end_time"] >= period_start) & (df_latency["transaction_end_time"] <= period_end)]
 
-        #2. tps 를 구한다. tps 해당 구간동안 발생한 트랜젝션을 단위시간으로 나눈 값이다.
+        #2. tps 를 구한다. tps는 해당 구간동안 발생한 트랜젝션을 단위시간으로 나눈 값이다.
         df.at[time, "tps"] = len(df_latency_filterd_by_time)/per_unit_time_sec
 
         #3. 단위 시간동안의 latency 평균값을 구한다. sum(latency)/트랜젝션 수
