@@ -186,8 +186,9 @@ fabric.properties
 .env
 .ebignore
 .ebextensions
-server.py
+main.py
 # Elastic Beanstalk Files
 .elasticbeanstalk/*
 !.elasticbeanstalk/*.cfg.yml
 !.elasticbeanstalk/*.global.yml
+test.py
