@@ -3,7 +3,7 @@ from fastapi import FastAPI, Body, Query, Path
 from pytz import timezone
 
 from log import logger
-from model import LatencyMonitorSchema
+from model import LatencyMonitorSchema, PerformanceMonitorSchema
 import pandas as pd
 from src.utils import get_project_root, convert_latency_dataframe_to_list_of_dict, convert_tps_dataframe_to_list_of_dict
 from datetime import datetime, timedelta
@@ -15,6 +15,79 @@ app = FastAPI(title="Latency check", description="latency check")
 @app.get("/")
 def home():
     return {"data": "home"}
+
+@app.post("/performance")
+def monitor_performance(patch: PerformanceMonitorSchema = Body(example=
+                                                              {
+                                                                  'memory': 426733568,
+                                                                  'cpu': 0.0,
+                                                                  'check_time': 1668682862229
+                                                              })):
+    """
+    클라이언츠 어플리케이션 performance(cpu, memory ) 5초 주기로 측정
+    :param patch:
+    :return:
+    """
+
+    memory = patch.memory
+    cpu = patch.cpu
+    check_time = patch.check_time
+    check_time = datetime.fromtimestamp(check_time/1000.0, tz=timezone("Asia/Seoul"))
+    check_time = check_time.strftime("%Y-%m-%dT%H:%M:%S")
+    ### 파일에 performance 데이터 저장하기
+    with open(file=f"{project_dir}/log_script/performance_check.csv", mode="a+") as f:
+        f.seek(0)
+        text_append = f"{check_time}\t{memory}\t{cpu}"
+
+        if f.read():
+            ### 내용이 존재하면 받아온값을 추가해준다.
+            f.write(f"\n{text_append}")
+
+        else:
+            ### 내용이 존재하지 않으면 칼럼을 먼저 추가하고 내용을 추가한다.
+            f.write(f"check_time\tmemory\tcpu")
+            f.write(f"\n{text_append}")
+    return patch
+
+@app.get("/performance")
+def get_performance(check_timestamp_gte: int =Query(default=1668683106806),
+                    check_timestamp_lte: int =Query(default=1668684722877)) -> List[Dict]:
+    """
+    저장된 performance의 시계열 조회
+    :param timestamp_gte: 마지막 시간
+    :param timestamp_lte: 시작 시간
+    :return:
+    """
+
+    ###1. 필터링 할 날짜 타입 변환(타임스탬프 -> datetime)
+    datetime_gte = datetime.fromtimestamp(check_timestamp_gte/1000.0)
+    datetime_lte = datetime.fromtimestamp(check_timestamp_lte/1000.0)
+    logger.debug(f"datetime_gte:{datetime_gte}/ datetime_lte:{datetime_lte}")
+
+    ###2.  퍼포먼스 로그 데이터 읽고 pandas 이용하여 시계열 필터링
+    df = pd.read_csv(f"{project_dir}/log_script/performance_check.csv", sep="\t")
+
+    df['check_time'] = pd.to_datetime(df['check_time'], format="%Y-%m-%dT%H:%M:%S")
+
+    df = df[(df['check_time'] >= f'{datetime_gte}') & (df['check_time'] <= f'{datetime_lte}')]
+
+
+    ###3. 데이터프레임 -> List[Dict]
+    data_list = []
+    for idx in df.index:
+        check_time = df.at[idx, "check_time"]
+        memory = df.at[idx, "memory"]
+        cpu = df.at[idx, "cpu"]
+
+        #
+        data = {
+                "check_time": check_time,
+                "memory": int(memory),
+                "cpu": int(cpu)
+                }
+        data_list.append(data)
+    return data_list
+    # return {"data_list": data_list}
 
 @app.post("/latency")
 def monitor_latency(patch: LatencyMonitorSchema = Body(example=
