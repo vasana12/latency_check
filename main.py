@@ -51,7 +51,7 @@ def monitor_performance(patch: PerformanceMonitorSchema = Body(example=
 
 @app.get("/performance")
 def get_performance(check_timestamp_gte: int =Query(default=1668683106806),
-                    check_timestamp_lte: int =Query(default=1668684722877)) -> List[Dict]:
+                    check_timestamp_lte: int =Query(default=1668720399000)) -> List[Dict]:
     """
     저장된 performance의 시계열 조회
     :param timestamp_gte: 마지막 시간
@@ -83,7 +83,7 @@ def get_performance(check_timestamp_gte: int =Query(default=1668683106806),
         data = {
                 "check_time": check_time,
                 "memory": int(memory),
-                "cpu": int(cpu)
+                "cpu": float(cpu)
                 }
         data_list.append(data)
     return data_list
